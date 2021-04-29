@@ -1,56 +1,63 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy ASP.Net Core app to Azure Web App - dotnetcoresqldb0421app
+# This workflow will build and push a .NET Core application to an Azure Web App on every push to the master branch.
+#
+# To configure this workflow:
+#
+# 1. Set up a secret in your repository named AZURE_WEBAPP_PUBLISH_PROFILE with the value of your Azure publish profile.
+#    Get the publish profile from the portal: https://docs.microsoft.com/visualstudio/deployment/tutorial-import-publish-settings-azure?view=vs-2019#create-the-publish-settings-file-in-azure-app-service
+#
+# 2. Change the values for the AZURE_WEBAPP_NAME, AZURE_WEBAPP_PACKAGE_PATH and NETCORE_VERSION environment variables  (below).
+#
+# For more information on GitHub Actions for Azure, refer to https://github.com/Azure/Actions
+# For more samples to get started with GitHub Action workflows to deploy to Azure, refer to https://github.com/Azure/actions-workflow-samples
+name: "Build and Deploy"
 
 on:
   push:
     branches:
       - master
-  workflow_dispatch:
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.gitignore'
+      - '**/*.gitattributes'
+
+env:
+  AZURE_WEBAPP_NAME: aspnet-core-sample-deploy  # set this to your application's name
+  AZURE_WEBAPP_PACKAGE_PATH: './published'      # set this to the path to your web app project, defaults to the repository root
+  NETCORE_VERSION: '3.1.101'                    # set this to the .NET Core version to use
 
 jobs:
   build:
-    runs-on: windows-latest
-
+    name: Build and Deploy
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-
-    - name: Set up .NET Core
+    
+    - name: Setup .NET Core SDK ${{ env.NETCORE_VERSION }}
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '3.1.301'
+        dotnet-version: ${{ env.NETCORE_VERSION }}
+    
+    - name: Restore packages
+      run: dotnet restore
 
-    - name: Build with dotnet
-      run: dotnet build --configuration Release
+    - name: Build app
+      run: dotnet build --configuration Release --no-restore
 
-    - name: dotnet publish
-      run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+    - name: Test app
+      run: dotnet test --no-build
 
-    - name: Upload artifact for deployment job
-      uses: actions/upload-artifact@v2
+    - name: Publish app for deploy
+      run: dotnet publish --configuration Release --no-build --output ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+
+    - name: 'Deploy to Azure WebApp'
+      uses: azure/webapps-deploy@v1
       with:
-        name: .net-app
-        path: ${{env.DOTNET_ROOT}}/myapp
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
 
-  deploy:
-    runs-on: windows-latest
-    needs: build
-    environment:
-      name: 'production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-
-    steps:
-    - name: Download artifact from build job
-      uses: actions/download-artifact@v2
+    - name: Publish Artifacts
+      uses: actions/upload-artifact@v1.0.0
       with:
-        name: .net-app
-
-    - name: Deploy to Azure Web App
-      id: deploy-to-webapp
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: 'dotnetcoresqldb0421app'
-        slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_5d309fd179a64c07a50a2f39b2cc093b }}
-        package: .
+        name: webapp
+        path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
