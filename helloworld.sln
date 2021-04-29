@@ -5,6 +5,11 @@ VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "helloworld", "helloworld.csproj", "{B1F5E473-1E07-4D7C-89E2-9526D50B7D14}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{53F54609-9F31-46BC-88CB-7E741728377A}"
+	ProjectSection(SolutionItems) = preProject
+		C:\Users\sandeshk\Downloads\profile_helloworld_appservice.xml = C:\Users\sandeshk\Downloads\profile_helloworld_appservice.xml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
